@@ -1,0 +1,5 @@
+^README\.Rmd$
+^_dev$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.DS_Store$

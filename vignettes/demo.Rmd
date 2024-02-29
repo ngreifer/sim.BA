@@ -1,0 +1,72 @@
+---
+title: "Demo"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is a demo vignette for `simBA`.
+
+```{r setup}
+library(simBA)
+```
+
+First, a user can create the `parameters` object that will be supplied to `simBA()` containing the parameters for the simulation design.
+
+```{r}
+parameters <- create_parameters(nbinary = 6,
+                                ncontinuous = 1,
+                                ncount = 1,
+                                # file = "parameters.csv",
+                                unmeasured_conf = "u1",
+                                unmeasured_type = "binary")
+
+# Note: uncomment `file` argument to automatically save file to supplied path
+```
+
+The user can manually fill in the parameter values. An example file comes with the package, which we can load in using the following:
+
+```{r}
+parameters <- read.csv(system.file("extdata", "parameters.csv",
+                                   package = "simBA"))
+```
+
+We can then run the simulation using `simBA()`:
+
+```{r}
+sim <- simBA(parameters,
+             iterations = 200,
+             size = 500,
+             treatment_prevalence = .2,
+             treatment_coeff = -.25,
+             outcome_prevalence = .4,
+             unmeasured_conf = "u1",
+             n_proxies = 2,
+             proxy_type = "binary",
+             corr = .7,
+             # cl = 4, #uncomment for speed on Mac
+             verbose = FALSE)
+
+sim
+```
+
+We can look at the results:
+
+```{r}
+summary(sim)
+
+plot(sim, "balance")
+
+plot(sim, "hr")
+```
+
+See `?plot.simBA` for details.

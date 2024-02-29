@@ -1,0 +1,28 @@
+---
+title: "Notes"
+author: "Noah Greifer"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+* For generating treatment, use `optimize()` to find exact value of intercept that minimizes difference between observed and requested treatment prevalence.
+
+* Progress bar and parallel computing available.
+
+* After matching, `coxph()` now uses cluster-robust SE as recommended in the literature and robust SEs for other analyses. Actually, SEs are turned off (not used in simulation and slow to compute)
+
+* Using `cobalt::col_w_smd()` instead of `CreateTableOne()` for computing SMDs. Advantages: no need to suppress printing, better control over how SMD is calculated, ability to use unweighted SD in denominator as recommended, faster, less processing of output
+
+* Matching done on logit of PS to match literature.
+
+* Added `create_parameters()` to help create parameters file. Either returns data.frame or writes to disk.
+
+* Added ability to request count variable as measured confounder; user must specify mean in parameters and variable is generated using `rpois()` (Poisson distribution).
+
+* True marginal ATT HR is not equal to treatment coef, so I added a new function to simulate the potential outcomes on 1 million units and estimate the marginal HR using the method described in [Austin (2012)](https://doi.org/10.1002/sim.5705). This is returned in the output. Note that the "truth" depends on whether censoring is present or not. Here I use the same censoring process as in the true data generation, so the true HR is computed using the censored data.
+
+* The intercept in the true PS model and the censoring time are both computed prior to simulating data, so individual datasets may vary with respect to treatment and outcome prevalence.

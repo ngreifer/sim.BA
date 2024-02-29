@@ -1,0 +1,15 @@
+Variable,Description,Type,prevalence ,mean,sd,coeff_treatment_model,coeff_outcome_model
+c1,Gender,binary,0.21,,,-0.2783,0.46667
+c2,Age,continuous,,77,7.6,0.0321,0.07803
+c3,GI complication history,binary,0.03,,,0.166,1.03895
+c4,Concurrent GI protective agent use,binary,0.21,,,0.091,-0.68778
+c5,Warfarin use history,binary,0.08,,,0.5499,0.23121
+c6,Number of hospitalizations,count,,8,,0.011,0.05539
+c7,Gastric ulcer history,binary,0.14,,,0.0488,
+c8,OA diagnosis,binary,0.35,,,0.4507,
+c9,RA diagnosis,binary,0.04,,,0.5488,
+c10,GI protective agent use history,binary,0.28,,,0.1569,
+c11,Any hospital admission in the CAP,binary,0.18,,,-0.0435,
+c12,COPD,binary,0.15,,,,0.24222
+c13,Corticosteroid use history,binary,0.07,,,,-0.13412
+u1,Unmeasured,binary,0.1,,,1,1
