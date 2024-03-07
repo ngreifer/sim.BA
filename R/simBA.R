@@ -14,7 +14,7 @@
 #' @param proxy_type when `n_proxies` is greater than 0, the type of variable the proxies should be. Allowable options in cldue `"binary"` (default) and `"continuous"`. Abbreviations allowed.
 #' @param corr when `n_proxies` is greater than 0, the desired correlations between the proxy variable and the unmeasured confounder in the simulation. Should be length 1 (in which case all proxies have the same correlation with the unmeasured confounder) or length equal to `n_proxies`.
 #' @param adj string; the method used to adjust for the confounders. Allowable options include `"matching"` (the default), which uses [MatchIt::matchit()], and `"weighting"`, which uses [WeightIt::weightit()]. Abbreviations allowed.
-#' @param estimand string; the desired estimand to target. Allowable options include `"ATT"` (default), `"ATC"`, and `"ATE"`. Note this is also passed to the `estimand` argument of the function used for adjustment as specified by `adj`.
+#' @param estimand string; the desired estimand to target. Allowable options include `"ATT"` (default), `"ATC"`, and `"ATE"`. Note this is also passed to the `estimand` argument of the function used for adjustment as specified by `adj` if omitted in `adj_args`.
 #' @param adj_args a list of arguments passed to [MatchIt::matchit()] or [WeightIt::weightit()] depending on the argument to `adj`. If not supplied, the parameter defaults will be used. Take care to specify these arguments to ensure the adjustment method is as desired.
 #' @param keep_data `logical`; whether to keep the datasets generated in each simulation. Default is `FALSE`. Setting to `TRUE` will make the output object large.
 #' @param cl a cluster object created by [parallel::makeCluster()], or an integer to indicate number of child-processes (integer values are ignored on Windows) for parallel evaluations. See [pbapply::pbapply()] for details. Default is `NULL` for no parallel evaluation.
@@ -72,7 +72,7 @@
 #' Bender R, Augustin T, Blettner M. Generating survival times to simulate Cox proportional hazards models. *Statistics in Medicine*. 2005;24(11):1713-1723. \doi{10.1002/sim.2059}
 #'
 #'
-#' @seealso [create_parameters()] for creating the `parameters` input; [plot.simBA()] for plotting the results. [MatchIt::matchit()] and [WeightIt::weightit()] for the functions used for matching and weighting, respectively, which detail the defaults used by these methods and allowable arguments that can be passed to `...`.
+#' @seealso [create_parameters()] for creating the `parameters` input; [plot.simBA()] for plotting the results. [MatchIt::matchit()] and [WeightIt::weightit()] for the functions used for matching and weighting, respectively, which detail the defaults used by these methods and allowable arguments that can be passed to `adj_args`.
 #'
 #' @examples
 #'

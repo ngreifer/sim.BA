@@ -56,8 +56,12 @@
                      df_name))
   }
 
+  if (any(startsWith(parameters$Variable, "."))) {
+    chk::err(sprintf("the names in the `Variable` column in %s cannot start with a period/full stop ('.')", df_name))
+  }
+
   if (any(grepl(" ", parameters$Variable, fixed = TRUE))) {
-    chk::err(sprintf("spaces are not allowed in the names present in `Variable` column in %s", df_name))
+    chk::err(sprintf("spaces are not allowed in the names present in the `Variable` column in %s", df_name))
   }
 
   if (n_proxies > 0 && any(paste0("p", seq_len(n_proxies)) %in% parameters$Variable)) {

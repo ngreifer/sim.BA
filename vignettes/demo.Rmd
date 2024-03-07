@@ -52,7 +52,10 @@ sim <- simBA(parameters,
              unmeasured_conf = "u1",
              n_proxies = 2,
              proxy_type = "binary",
-             corr = .7,
+             corr = c(.7, .4),
+             adj = "match",
+             estimand = "ATT",
+             adj_args = list(method = "quick"), #generalized full matching
              # cl = 4, #uncomment for speed on Mac
              verbose = FALSE)
 

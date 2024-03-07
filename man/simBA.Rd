@@ -16,6 +16,9 @@ simBA(
   n_proxies = 0,
   proxy_type = "binary",
   corr = NULL,
+  adj = "matching",
+  estimand = "ATT",
+  adj_args = list(),
   keep_data = FALSE,
   cl = NULL,
   verbose = TRUE
@@ -44,6 +47,12 @@ simBA(
 
 \item{corr}{when \code{n_proxies} is greater than 0, the desired correlations between the proxy variable and the unmeasured confounder in the simulation. Should be length 1 (in which case all proxies have the same correlation with the unmeasured confounder) or length equal to \code{n_proxies}.}
 
+\item{adj}{string; the method used to adjust for the confounders. Allowable options include \code{"matching"} (the default), which uses \code{\link[MatchIt:matchit]{MatchIt::matchit()}}, and \code{"weighting"}, which uses \code{\link[WeightIt:weightit]{WeightIt::weightit()}}. Abbreviations allowed.}
+
+\item{estimand}{string; the desired estimand to target. Allowable options include \code{"ATT"} (default), \code{"ATC"}, and \code{"ATE"}. Note this is also passed to the \code{estimand} argument of the function used for adjustment as specified by \code{adj} if omitted in \code{adj_args}.}
+
+\item{adj_args}{a list of arguments passed to \code{\link[MatchIt:matchit]{MatchIt::matchit()}} or \code{\link[WeightIt:weightit]{WeightIt::weightit()}} depending on the argument to \code{adj}. If not supplied, the parameter defaults will be used. Take care to specify these arguments to ensure the adjustment method is as desired.}
+
 \item{keep_data}{\code{logical}; whether to keep the datasets generated in each simulation. Default is \code{FALSE}. Setting to \code{TRUE} will make the output object large.}
 
 \item{cl}{a cluster object created by \code{\link[parallel:makeCluster]{parallel::makeCluster()}}, or an integer to indicate number of child-processes (integer values are ignored on Windows) for parallel evaluations. See \code{\link[pbapply:pbapply]{pbapply::pbapply()}} for details. Default is \code{NULL} for no parallel evaluation.}
@@ -65,18 +74,18 @@ Basic \code{print()} and \code{summary()} methods are available. See \verb{[plot
 \code{simBA()} runs a simulation to compute the magnitude of the bias in a hazard ratio in the presence of unmeasured confounding, possibly when proxies are available.
 }
 \details{
-\code{simBA()} runs a simulation study to examine the impact of an unmeasured confoudner on the bias of the marginal hazard ratio when using matching to adjust for observed confounders and, optionally, proxies of hte unmeasured confounder. The user must specify the simulation data-generating model using the \code{parameters} argument and other arguments that control generation of the treatment, outcome, and proxies. Requirements for the \code{parameters} input are described below.
+\code{simBA()} runs a simulation study to examine the impact of an unmeasured confounder on the bias of the marginal hazard ratio when using matching or weighting to adjust for observed confounders and, optionally, proxies of the unmeasured confounder. The user must specify the simulation data-generating model using the \code{parameters} argument and other arguments that control generation of the treatment, outcome, and proxies. Requirements for the \code{parameters} input are described below. In addition, the user must specify the form of adjustment used (matching or weighting) using the \code{adj} argument, the desired estimand using the \code{estimand} argument, and any other arguments passed to \code{adj_args} to control the matching/weighting method. Note by default, the ATT is targeted, even though the usual default estimand for weighting using \code{WeightIt::weightit()} is the ATE.
 
-Broadly, the \code{parameters} input contains the name of the measured and unmeasured confounders, their variable types (binary, continuous, or count), their distributions, and their coefficients in the treatment and outcome models. These values are used to generate a synthetic dataset of size corresponding to the \code{size} argument, which additionally contains the true propensity score used to simulate the treatment, the treatment itself, and the outcome (i.e., survival time and whether an event occured). When proxies are requested (i.e., \code{n_proxies} set to 1 or greater), proxies for the unmeasured confounder are additionally generated and appended to the synthetic dataset.
+Broadly, the \code{parameters} input contains the name of the measured and unmeasured confounders, their variable types (binary, continuous, or count), their distributions, and their coefficients in the treatment and outcome models. These values are used to generate a synthetic dataset of size corresponding to the \code{size} argument, which additionally contains the true propensity score used to simulate the treatment, the treatment itself, and the outcome (i.e., survival time and whether an event occurred). When proxies are requested (i.e., \code{n_proxies} set to 1 or greater), proxies for the unmeasured confounder are additionally generated and appended to the synthetic dataset.
 
-In each iteration, a synthetic dataset is generate, and then that dataset is analyzed. First, a crude marginal hazard ratio is estimated by fitting a Cox proportional hazards model for the survival times and events as a function just of the treatment. Then, the dataset is matched using propensity score matching with the measured covariates, and a second hazard ratio is estimated as above, this time in the matched sample. If proxies are requested, the dataset is matched again using propensity score matching with the measured covariates and proxies, and a third hazard ratio is estimated as above. In addition, the balance (as measured by the  standardized mean difference [SMD]) is reported for the unmeasured confounder and proxies before and after each round of matching.
+In each iteration, a synthetic dataset is generated, and then that dataset is analyzed. First, a crude marginal hazard ratio is estimated by fitting a Cox proportional hazards model for the survival times and events as a function just of the treatment. Then, the dataset is adjusted using matching or weighting with the measured covariates, and a second hazard ratio is estimated as above, this time in the matched or weighted sample. If proxies are requested, the dataset is adjusted again using matching or weighting with the measured covariates and proxies, and a third hazard ratio is estimated as above. In addition, the balance (as measured by the  standardized mean difference [SMD]) is reported for the unmeasured confounder and proxies before adjustment and after each round of matching or weighting.
 \subsection{The data-generating model}{
 
 The data-generating model for the outcome corresponds to a Cox proportional hazards model as described by Bender et al. (2005). The coefficients on the measured and unmeasured confounders in the outcome model are specified in the \code{parameters} input, and the coefficient on the treatment variable is specified by the \code{treatment_coeff} argument. The treatment is generated as a Bernoulli variable with probability equal to the true propensity score, which is generated according to a logistic regression model with the coefficients on the confounders specified in the \code{parameters} input.
 
 The proxies, if requested, are generated such that their correlation with the unmeasured confounder is exactly equal to the values supplied to \code{corr}. The confounder are generated as uncorrelated variables according to the distribution supplied in the \code{parameters} input. Binary variables are generated as Bernoulli variables with probability equal to the supplied prevalence. Continuous variables are generated as Gaussian (Normal) variables with mean and standard deviation equal to their supplied values. Count variables are generated as Poisson variables with mean equal to its supplied value.
 
-Some parameters are determined first by generating a dataset with one million observations. With this dataset, the intercept of the true propensity score model is selected as that which yields a treatment prevalence equal to that specified in the \code{treatment_prevalence} argument, and the censoring time for the outcomes is selected as that which yields an outcome event prevalence equal to that specified in the \code{outcome_prevalence} argument. In addition, the true marginal hazard ratio is computed using this dataset by generating potential outcomes under each treatment and fitting a Cox model of the potential outcome survival times and events as a function of the treatment under which the potential outcome was generate as recommended by Austin (2013).
+Some parameters are determined first by generating a dataset with one million observations. With this dataset, the intercept of the true propensity score model is selected as that which yields a treatment prevalence equal to that specified in the \code{treatment_prevalence} argument, and the censoring time for the outcomes is selected as that which yields an outcome event prevalence equal to that specified in the \code{outcome_prevalence} argument. In addition, the true marginal hazard ratio is computed using this dataset by generating potential outcomes under each treatment and fitting a Cox model of the potential outcome survival times and events as a function of the treatment under which the potential outcome was generated as recommended by Austin (2013).
 }
 
 \subsection{The \code{parameters} input object}{
@@ -104,7 +113,8 @@ To automatically create a skeleton of the \code{parameters} input for you to fil
 parameters <- read.csv(system.file("extdata", "parameters.csv",
                                    package = "simBA"))
 \donttest{
-  # Run simulation
+  # Run simulation; adjustment via PS weighting for
+  # the ATE
   sim <- simBA(parameters,
                iterations = 50,
                size = 200,
@@ -113,9 +123,13 @@ parameters <- read.csv(system.file("extdata", "parameters.csv",
                outcome_prevalence = .5,
                unmeasured_conf = "u1",
                n_proxies = 2,
-               proxy_type = "binar",
+               proxy_type = "binary",
                corr = c(.5, .8),
-               verbose = FALSE)
+               verbose = FALSE,
+               # Adjustment arguments
+               adj = "weighting",
+               estimand = "ATE",
+               adj_args = list(method = "glm"))
 
   sim
 
@@ -132,5 +146,5 @@ Austin PC. The performance of different propensity score methods for estimating 
 Bender R, Augustin T, Blettner M. Generating survival times to simulate Cox proportional hazards models. \emph{Statistics in Medicine}. 2005;24(11):1713-1723. \doi{10.1002/sim.2059}
 }
 \seealso{
-\code{\link[=create_parameters]{create_parameters()}} for creating the \code{parameters} input; \code{\link[=plot.simBA]{plot.simBA()}} for plotting the results.
+\code{\link[=create_parameters]{create_parameters()}} for creating the \code{parameters} input; \code{\link[=plot.simBA]{plot.simBA()}} for plotting the results. \code{\link[MatchIt:matchit]{MatchIt::matchit()}} and \code{\link[WeightIt:weightit]{WeightIt::weightit()}} for the functions used for matching and weighting, respectively, which detail the defaults used by these methods and allowable arguments that can be passed to \code{adj_args}.
 }

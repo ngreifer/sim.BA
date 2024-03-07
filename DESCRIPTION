@@ -1,6 +1,6 @@
 Package: simBA
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: 
     c(
     person("Rishi", "Desai", , "rdesai@bwh.harvard.edu", role = c("aut", "cre"),
@@ -17,7 +17,6 @@ RoxygenNote: 7.3.1
 Imports: 
     chk (>= 0.9.1),
     cobalt (>= 4.5.3),
-    MatchIt (>= 4.5.5),
     ggplot2 (>= 3.4.4),
     pbapply (>= 1.7-2),
     rlang (>= 1.1.3),
@@ -25,6 +24,8 @@ Imports:
     survival,
     utils
 Suggests:
+    MatchIt (>= 4.5.5),
+    WeightIt (>= 0.14.2),
     parallel,
     openxlsx (>= 4.2.5.2),
     knitr,
