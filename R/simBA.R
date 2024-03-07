@@ -13,6 +13,9 @@
 #' @param n_proxies the number of proxies for the unmeasured confounder to include in the simulation. Default is 0.
 #' @param proxy_type when `n_proxies` is greater than 0, the type of variable the proxies should be. Allowable options in cldue `"binary"` (default) and `"continuous"`. Abbreviations allowed.
 #' @param corr when `n_proxies` is greater than 0, the desired correlations between the proxy variable and the unmeasured confounder in the simulation. Should be length 1 (in which case all proxies have the same correlation with the unmeasured confounder) or length equal to `n_proxies`.
+#' @param adj string; the method used to adjust for the confounders. Allowable options include `"matching"` (the default), which uses [MatchIt::matchit()], and `"weighting"`, which uses [WeightIt::weightit()]. Abbreviations allowed.
+#' @param estimand string; the desired estimand to target. Allowable options include `"ATT"` (default), `"ATC"`, and `"ATE"`. Note this is also passed to the `estimand` argument of the function used for adjustment as specified by `adj`.
+#' @param adj_args a list of arguments passed to [MatchIt::matchit()] or [WeightIt::weightit()] depending on the argument to `adj`. If not supplied, the parameter defaults will be used. Take care to specify these arguments to ensure the adjustment method is as desired.
 #' @param keep_data `logical`; whether to keep the datasets generated in each simulation. Default is `FALSE`. Setting to `TRUE` will make the output object large.
 #' @param cl a cluster object created by [parallel::makeCluster()], or an integer to indicate number of child-processes (integer values are ignored on Windows) for parallel evaluations. See [pbapply::pbapply()] for details. Default is `NULL` for no parallel evaluation.
 #' @param verbose whether to print information about the progress of the simulation, including a progress bar. Default is `TRUE`.
@@ -31,11 +34,11 @@
 #'
 #' @details
 #'
-#' `simBA()` runs a simulation study to examine the impact of an unmeasured confoudner on the bias of the marginal hazard ratio when using matching to adjust for observed confounders and, optionally, proxies of hte unmeasured confounder. The user must specify the simulation data-generating model using the `parameters` argument and other arguments that control generation of the treatment, outcome, and proxies. Requirements for the `parameters` input are described below.
+#' `simBA()` runs a simulation study to examine the impact of an unmeasured confounder on the bias of the marginal hazard ratio when using matching or weighting to adjust for observed confounders and, optionally, proxies of the unmeasured confounder. The user must specify the simulation data-generating model using the `parameters` argument and other arguments that control generation of the treatment, outcome, and proxies. Requirements for the `parameters` input are described below. In addition, the user must specify the form of adjustment used (matching or weighting) using the `adj` argument, the desired estimand using the `estimand` argument, and any other arguments passed to `adj_args` to control the matching/weighting method. Note by default, the ATT is targeted, even though the usual default estimand for weighting using `WeightIt::weightit()` is the ATE.
 #'
-#' Broadly, the `parameters` input contains the name of the measured and unmeasured confounders, their variable types (binary, continuous, or count), their distributions, and their coefficients in the treatment and outcome models. These values are used to generate a synthetic dataset of size corresponding to the `size` argument, which additionally contains the true propensity score used to simulate the treatment, the treatment itself, and the outcome (i.e., survival time and whether an event occured). When proxies are requested (i.e., `n_proxies` set to 1 or greater), proxies for the unmeasured confounder are additionally generated and appended to the synthetic dataset.
+#' Broadly, the `parameters` input contains the name of the measured and unmeasured confounders, their variable types (binary, continuous, or count), their distributions, and their coefficients in the treatment and outcome models. These values are used to generate a synthetic dataset of size corresponding to the `size` argument, which additionally contains the true propensity score used to simulate the treatment, the treatment itself, and the outcome (i.e., survival time and whether an event occurred). When proxies are requested (i.e., `n_proxies` set to 1 or greater), proxies for the unmeasured confounder are additionally generated and appended to the synthetic dataset.
 #'
-#' In each iteration, a synthetic dataset is generate, and then that dataset is analyzed. First, a crude marginal hazard ratio is estimated by fitting a Cox proportional hazards model for the survival times and events as a function just of the treatment. Then, the dataset is matched using propensity score matching with the measured covariates, and a second hazard ratio is estimated as above, this time in the matched sample. If proxies are requested, the dataset is matched again using propensity score matching with the measured covariates and proxies, and a third hazard ratio is estimated as above. In addition, the balance (as measured by the  standardized mean difference \[SMD\]) is reported for the unmeasured confounder and proxies before and after each round of matching.
+#' In each iteration, a synthetic dataset is generated, and then that dataset is analyzed. First, a crude marginal hazard ratio is estimated by fitting a Cox proportional hazards model for the survival times and events as a function just of the treatment. Then, the dataset is adjusted using matching or weighting with the measured covariates, and a second hazard ratio is estimated as above, this time in the matched or weighted sample. If proxies are requested, the dataset is adjusted again using matching or weighting with the measured covariates and proxies, and a third hazard ratio is estimated as above. In addition, the balance (as measured by the  standardized mean difference \[SMD\]) is reported for the unmeasured confounder and proxies before adjustment and after each round of matching or weighting.
 #'
 #' ## The data-generating model
 #'
@@ -43,7 +46,7 @@
 #'
 #' The proxies, if requested, are generated such that their correlation with the unmeasured confounder is exactly equal to the values supplied to `corr`. The confounder are generated as uncorrelated variables according to the distribution supplied in the `parameters` input. Binary variables are generated as Bernoulli variables with probability equal to the supplied prevalence. Continuous variables are generated as Gaussian (Normal) variables with mean and standard deviation equal to their supplied values. Count variables are generated as Poisson variables with mean equal to its supplied value.
 #'
-#' Some parameters are determined first by generating a dataset with one million observations. With this dataset, the intercept of the true propensity score model is selected as that which yields a treatment prevalence equal to that specified in the `treatment_prevalence` argument, and the censoring time for the outcomes is selected as that which yields an outcome event prevalence equal to that specified in the `outcome_prevalence` argument. In addition, the true marginal hazard ratio is computed using this dataset by generating potential outcomes under each treatment and fitting a Cox model of the potential outcome survival times and events as a function of the treatment under which the potential outcome was generate as recommended by Austin (2013).
+#' Some parameters are determined first by generating a dataset with one million observations. With this dataset, the intercept of the true propensity score model is selected as that which yields a treatment prevalence equal to that specified in the `treatment_prevalence` argument, and the censoring time for the outcomes is selected as that which yields an outcome event prevalence equal to that specified in the `outcome_prevalence` argument. In addition, the true marginal hazard ratio is computed using this dataset by generating potential outcomes under each treatment and fitting a Cox model of the potential outcome survival times and events as a function of the treatment under which the potential outcome was generated as recommended by Austin (2013).
 #'
 #' ## The `parameters` input object
 #'
@@ -69,7 +72,7 @@
 #' Bender R, Augustin T, Blettner M. Generating survival times to simulate Cox proportional hazards models. *Statistics in Medicine*. 2005;24(11):1713-1723. \doi{10.1002/sim.2059}
 #'
 #'
-#' @seealso [create_parameters()] for creating the `parameters` input; [plot.simBA()] for plotting the results.
+#' @seealso [create_parameters()] for creating the `parameters` input; [plot.simBA()] for plotting the results. [MatchIt::matchit()] and [WeightIt::weightit()] for the functions used for matching and weighting, respectively, which detail the defaults used by these methods and allowable arguments that can be passed to `...`.
 #'
 #' @examples
 #'
@@ -78,7 +81,8 @@
 #' parameters <- read.csv(system.file("extdata", "parameters.csv",
 #'                                    package = "simBA"))
 #' \donttest{
-#'   # Run simulation
+#'   # Run simulation; adjustment via PS weighting for
+#'   # the ATE
 #'   sim <- simBA(parameters,
 #'                iterations = 50,
 #'                size = 200,
@@ -87,9 +91,13 @@
 #'                outcome_prevalence = .5,
 #'                unmeasured_conf = "u1",
 #'                n_proxies = 2,
-#'                proxy_type = "binar",
+#'                proxy_type = "binary",
 #'                corr = c(.5, .8),
-#'                verbose = FALSE)
+#'                verbose = FALSE,
+#'                # Adjustment arguments
+#'                adj = "weighting",
+#'                estimand = "ATE",
+#'                adj_args = list(method = "glm"))
 #'
 #'   sim
 #'
@@ -104,6 +112,7 @@
 simBA <- function(parameters, iterations = 500, size = 1000, treatment_prevalence,
                   treatment_coeff, outcome_prevalence, dist = "exponential",
                   unmeasured_conf, n_proxies = 0, proxy_type = "binary", corr = NULL,
+                  adj = "matching", estimand = "ATT", adj_args = list(),
                   keep_data = FALSE, cl = NULL, verbose = TRUE) {
 
   mcall <- match.call()
@@ -156,6 +165,27 @@ simBA <- function(parameters, iterations = 500, size = 1000, treatment_prevalenc
     }
   }
 
+  chk::chk_string(adj)
+  adj <- tolower(adj)
+  adj <- match_arg(adj, c("matching", "weighting"))
+  rlang::check_installed(switch(adj,
+                                "matching" = "MatchIt",
+                                "weighting" = "WeightIt"))
+
+  chk::chk_string(estimand)
+  estimand <- toupper(estimand)
+  estimand <- match_arg(estimand, c("ATT", "ATC", "ATE"))
+
+  if (length(adj_args) == 0) adj_args <- list()
+  chk::chk_list(adj_args)
+
+  if (is.null(adj_args$estimand)) {
+    adj_args$estimand <- estimand
+  }
+  else if (!identical(adj_args$estimand, estimand)) {
+    chk::wrn("the `estimand` supplied in `adj_args` does not match the estimand supplied to `estimand`")
+  }
+
   chk::chk_flag(keep_data)
 
   chk::chk_flag(verbose)
@@ -167,9 +197,6 @@ simBA <- function(parameters, iterations = 500, size = 1000, treatment_prevalenc
   if (verbose) {
     cat("Computing simulation parameters...\t")
   }
-
-  estimand <- "ATT"   #estimand
-  method <- "nearest" #matching method
 
   sim_params <- .gen_params(parameters, size = 1e6, treatment_prevalence,
                             treatment_coeff, outcome_prevalence, dist,
@@ -186,8 +213,9 @@ simBA <- function(parameters, iterations = 500, size = 1000, treatment_prevalenc
                          cens_time = sim_params$cens_time,
                          true_logHR = sim_params$true_logHR,
                          unmeasured_conf, n_proxies, proxy_type, corr)
+
     .analyze_data(simdata, keep_data = keep_data,
-                  estimand = estimand, method = method)
+                  adj = adj, adj_args = adj_args)
   })
 
   balance_table <- do.call("rbind", lapply(sim_out, `[[`, "all_balance_tables"))
@@ -227,6 +255,7 @@ simBA <- function(parameters, iterations = 500, size = 1000, treatment_prevalenc
   attr(out, "unmeasured_conf") <- unmeasured_conf
   attr(out, "proxy_type") <- proxy_type
   attr(out, "corr") <- corr
+  attr(out, "adj") <- adj
   attr(out, "call") <- mcall
 
   class(out) <- "simBA"
@@ -255,6 +284,7 @@ print.simBA <- function(x, ...) {
                 attr(x, "proxy_type"),
                 paste(round(unique(attr(x, "corr")), 2), collapse = ", ")))
   }
+  cat(sprintf(" - adjustment method: %s\n", attr(x, "adj")))
   cat("Use `summary()` and `plot()` to examine results.\n")
 
   invisible(x)
@@ -488,16 +518,39 @@ print.summary.simBA <- function(x, digits = 3, ...) {
   simdata
 }
 
-.analyze_data <- function(simdata, keep_data = FALSE, caliper = .2, method = "nearest", estimand = "ATT") {
+.analyze_data <- function(simdata, keep_data = FALSE, adj = "matching", adj_args = list()) {
   # Note: robust SEs set to FALSE, as they are not used in the simulation. Correct use
   # requires including subclass membership for matching, too.
+
+  adj_fun <- {
+    if (adj == "matching")
+      MatchIt::matchit
+    else if (length(adj_args) > 1 || !adj_args$estimand %in% c("ATT", "ATC", "ATE", "ATO"))
+      WeightIt::weightit
+    else
+      #Simple PS weighting with no dependencies
+      function(formula, data, estimand) {
+        fit <- glm(formula, data = data, family = quasibinomial)
+        ps <- fit$fitted.values
+        w_ATE <- ifelse(simdata$.treatment == 1, 1 / ps, 1 / (1 - ps))
+
+        list(weights = switch(
+          estimand,
+          "ATT" = ps * w_ATE,
+          "ATC" = (1 - ps) * w_ATE,
+          "ATO" = ps * (1 - ps) * w_ATE,
+          "ATE" = w_ATE)
+        )
+      }
+  }
+
+  adj_args$data <- simdata
 
 
   ## true effects
   true_results <- data.frame(HR = attr(simdata, "true_logHR"),
                              SE = NA_real_,
                              adjustment = "true")
-
 
   ## model 1- crude
   crude_model <- survival::coxph(survival::Surv(.survt, .event) ~ .treatment,
@@ -516,17 +569,17 @@ print.summary.simBA <- function(x, digits = 3, ...) {
 
   f_L1 <- reformulate(covariates, ".treatment")
 
-  m.out_L1 <- MatchIt::matchit(f_L1, data = simdata,
-                               method = method,
-                               link = "linear.logit",
-                               caliper = caliper,
-                               estiamnd = estimand)
+  adj_args$formula <- f_L1
 
-  matched_L1 <- MatchIt::match.data(m.out_L1, data = simdata) #save PS matched data
+  adj.out_L1 <- do.call(adj_fun, adj_args, quote = TRUE)
+
+  simdata$.L1_weights <- adj.out_L1$weights
+  simdata$.L1_subclass <- adj.out_L1$subclass
 
   L1_model <- survival::coxph(survival::Surv(.survt, .event) ~ .treatment,
-                              data = matched_L1,
-                              weights = matched_L1$weights,
+                              data = simdata,
+                              weights = simdata$.L1_weights,
+                              subset = simdata$.L1_weights != 0,
                               # cluster = matched_L2$subclass,
                               robust = FALSE,
                               method = "breslow")
@@ -547,17 +600,17 @@ print.summary.simBA <- function(x, digits = 3, ...) {
     # write the formula
     f_L2 <- reformulate(c(covariates, proxy_vars), ".treatment")
 
-    m.out_L2 <- MatchIt::matchit(f_L2, data = simdata,
-                                 method = method,
-                                 link = "linear.logit",
-                                 caliper = caliper,
-                                 estiamnd = estimand)
+    adj_args$formula <- f_L2
 
-    matched_L2 <- MatchIt::match.data(m.out_L2, data = simdata) #save PS matched data
+    adj.out_L2 <- do.call(adj_fun, adj_args, quote = TRUE)
+
+    simdata$.L2_weights <- adj.out_L2$weights
+    simdata$.L2_subclass <- adj.out_L2$subclass
 
     L2_model <- survival::coxph(survival::Surv(.survt, .event) ~ .treatment,
-                                data = matched_L2,
-                                weights = matched_L2$weights,
+                                data = simdata,
+                                weights = simdata$.L2_weights,
+                                subset = simdata$.L2_weights != 0,
                                 # cluster = matched_L2$subclass,
                                 robust = FALSE,
                                 method = "breslow")
@@ -576,35 +629,7 @@ print.summary.simBA <- function(x, digits = 3, ...) {
   #Balance
   unmeasured_conf <- attr(simdata, "unmeasured_conf")
 
-  if (length(proxy_vars) > 0) {
-    balance_vars <- c(unmeasured_conf, proxy_vars)
-
-    #Crude
-    balance_table_crude <- data.frame(variable = balance_vars,
-                                      adjustment = "crude",
-                                      SMD = cobalt::col_w_smd(simdata[balance_vars],
-                                                              treat = simdata$.treatment,
-                                                              s.d.denom = "treated"))
-
-    #L1
-    balance_table_L1 <- data.frame(variable = balance_vars,
-                                   adjustment = "L1",
-                                   SMD = cobalt::col_w_smd(simdata[balance_vars],
-                                                           treat = simdata$.treatment,
-                                                           s.d.denom = "treated",
-                                                           weights = m.out_L1$weights))
-
-    #L2
-    balance_table_L2 <- data.frame(variable = balance_vars,
-                                   adjustment = "L2",
-                                   SMD = cobalt::col_w_smd(simdata[balance_vars],
-                                                           treat = simdata$.treatment,
-                                                           s.d.denom = "treated",
-                                                           weights = m.out_L2$weights))
-
-    all_balance_tables <- rbind(balance_table_crude, balance_table_L1, balance_table_L2)
-  }
-  else {
+  if (length(proxy_vars) == 0) {
     balance_vars <- unmeasured_conf
 
     #Crude
@@ -620,9 +645,37 @@ print.summary.simBA <- function(x, digits = 3, ...) {
                                    SMD = cobalt::col_w_smd(simdata[balance_vars],
                                                            treat = simdata$.treatment,
                                                            s.d.denom = "treated",
-                                                           weights = m.out_L1$weights))
+                                                           weights = simdata$.L1_weights))
 
     all_balance_tables <- rbind(balance_table_crude, balance_table_L1)
+  }
+  else {
+    balance_vars <- c(unmeasured_conf, proxy_vars)
+
+    #Crude
+    balance_table_crude <- data.frame(variable = balance_vars,
+                                      adjustment = "crude",
+                                      SMD = cobalt::col_w_smd(simdata[balance_vars],
+                                                              treat = simdata$.treatment,
+                                                              s.d.denom = "treated"))
+
+    #L1
+    balance_table_L1 <- data.frame(variable = balance_vars,
+                                   adjustment = "L1",
+                                   SMD = cobalt::col_w_smd(simdata[balance_vars],
+                                                           treat = simdata$.treatment,
+                                                           s.d.denom = "treated",
+                                                           weights = simdata$.L1_weights))
+
+    #L2
+    balance_table_L2 <- data.frame(variable = balance_vars,
+                                   adjustment = "L2",
+                                   SMD = cobalt::col_w_smd(simdata[balance_vars],
+                                                           treat = simdata$.treatment,
+                                                           s.d.denom = "treated",
+                                                           weights = simdata$.L2_weights))
+
+    all_balance_tables <- rbind(balance_table_crude, balance_table_L1, balance_table_L2)
   }
 
   all_balance_tables$adjustment <- factor(all_balance_tables$adjustment, levels = c("crude", "L1", "L2"))
