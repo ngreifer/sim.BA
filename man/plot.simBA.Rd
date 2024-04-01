@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{a \code{simBA} object; the output of a call to \code{\link[=simBA]{simBA()}}.}
 
-\item{type}{the type of plot to produce; allowable options include \code{"balance"} (default) and \code{"hr"}. Abbreviations allowed.}
+\item{type}{the type of plot to produce; allowable options include \code{"balance"} (default), \code{"hr"}, and \code{"bias"}. Abbreviations allowed. See Details.}
 
 \item{...}{further arguments passed to \code{\link[ggplot2:geom_boxplot]{ggplot2::geom_boxplot()}}.}
 }
@@ -20,7 +20,7 @@ A \code{ggplot} object, which can be modified using \code{ggplot2} syntax.
 \code{plot()} plots the output of a call to \code{simBA()}. The plot can contain either the estimated hazard ratios or standardized mean differences across simulations, each in a set of box plots.
 }
 \details{
-The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed).
+The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed). The bias plot plots the relative error in the log HR with a vertical line at 0\% (indicating no error). Note that these values can explode when the true HR is close to 0.
 }
 \examples{
 # See help("simBA") for examples.

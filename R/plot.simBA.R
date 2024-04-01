@@ -3,14 +3,14 @@
 #' `plot()` plots the output of a call to `simBA()`. The plot can contain either the estimated hazard ratios or standardized mean differences across simulations, each in a set of box plots.
 #'
 #' @param x a `simBA` object; the output of a call to [simBA()].
-#' @param type the type of plot to produce; allowable options include `"balance"` (default) and `"hr"`. Abbreviations allowed.
+#' @param type the type of plot to produce; allowable options include `"balance"` (default), `"hr"`, and `"bias"`. Abbreviations allowed. See Details.
 #' @param ... further arguments passed to [ggplot2::geom_boxplot()].
 #'
 #' @returns
 #' A `ggplot` object, which can be modified using `ggplot2` syntax.
 #'
 #' @details
-#' The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed).
+#' The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed). The bias plot plots the relative error in the log HR with a vertical line at 0% (indicating no error). Note that these values can explode when the true HR is close to 0.
 #'
 #' @seealso [simBA()] for performing the simulation.
 #'
@@ -23,7 +23,7 @@ plot.simBA <- function(x, type = "balance", ...) {
 
   chk::chk_string(type)
   type <- tolower(type)
-  type <- match_arg(type, c("balance", "hr"))
+  type <- match_arg(type, c("balance", "hr", "bias"))
   adj <- attr(x, "adj")
 
   if (type == "balance") {
@@ -39,7 +39,9 @@ plot.simBA <- function(x, type = "balance", ...) {
                             levels = c(attr(x, "unmeasured_conf"), rev(proxy_vars)),
                             labels = c("Unmeasured\nConfounder", rev(new_proxy_vars)))
     bal$adjustment <- factor(bal$adjustment, levels = c("crude", "L1", "L2"),
-                             labels = c("Unadjusted", paste("Level 1", firstup(adj)), paste("Level 2", firstup(adj))))
+                             labels = c("Unadjusted",
+                                        paste("Level 1", firstup(adj)),
+                                        paste("Level 2", firstup(adj))))
 
     bal$scenario <- factor(paste(bal$variable, bal$adjustment),
                            nmax = nlevels(bal$variable) * nlevels(bal$adjustment ))
@@ -63,13 +65,15 @@ plot.simBA <- function(x, type = "balance", ...) {
     p
 
   }
-  else { #type == "hr"
+  else if (type == "hr") {
     est <- do.call("rbind", lapply(x$sim_out, `[[`, "all_HRs"))
 
     est <- est[est$adjustment != "true",]
 
     est$adjustment <- factor(est$adjustment, levels = c("L2", "L1", "crude"),
-                             labels = c(paste("Level 2", firstup(adj)), paste("Level 1", firstup(adj)), "Crude"))
+                             labels = c(paste("Level 2", firstup(adj)),
+                                        paste("Level 1", firstup(adj)),
+                                        "Unadjusted"))
 
     p <- ggplot(est) +
       geom_boxplot(aes(x = exp(.data$HR),
@@ -80,9 +84,36 @@ plot.simBA <- function(x, type = "balance", ...) {
       geom_vline(xintercept = x$HR_table$HR[x$HR_table$adjustment == "true"],
                  linetype = "dashed") +
       scale_x_log10() +
+      scale_fill_grey(start = .55, end = .95) +
       theme_bw() +
       guides(fill = "none") +
       labs(x = "Hazard Ratio", y = NULL)
+
+    p
+  }
+  else {
+    est <- do.call("rbind", lapply(x$sim_out, `[[`, "all_HRs"))
+
+    est <- est[est$adjustment != "true",]
+
+    true <- log(x$HR_table$HR[x$HR_table$adjustment == "true"])
+
+    est$adjustment <- factor(est$adjustment, levels = c("L2", "L1", "crude"),
+                             labels = c(paste("Level 2", firstup(adj)),
+                                        paste("Level 1", firstup(adj)),
+                                        "Unadjusted"))
+
+    p <- ggplot(est) +
+      geom_boxplot(aes(x = (.data$HR - true) / abs(true),
+                       y = .data$adjustment,
+                       fill = .data$adjustment),
+                   ...) +
+      geom_vline(xintercept = 0) +
+      scale_x_continuous(labels = scales::percent_format()) +
+      scale_fill_grey(start = .55, end = .95) +
+      theme_bw() +
+      guides(fill = "none") +
+      labs(x = "Log Hazard Ratio Relative Bias", y = NULL)
 
     p
   }
