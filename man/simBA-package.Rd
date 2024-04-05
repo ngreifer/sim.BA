@@ -3,9 +3,9 @@
 \docType{package}
 \name{simBA-package}
 \alias{simBA-package}
-\title{simBA: What the Package Does (One Line, Title Case)}
+\title{simBA: Simulation-Based Bias Analysis for Observational Studies}
 \description{
-What the package does (one paragraph).
+This package allows user to conduct a simulation based quantitative bias analysis using covariate structures generated with individual-level data to characterize the bias arising from unmeasured confounding. Users can specify their desired data generating mechanisms to simulate data and quantitatively summarize findings in an end-to-end application using this package.
 }
 \author{
 \strong{Maintainer}: Rishi Desai \email{rdesai@bwh.harvard.edu} (\href{https://orcid.org/0000-0003-0299-7273}{ORCID})

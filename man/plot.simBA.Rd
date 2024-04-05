@@ -20,7 +20,7 @@ A \code{ggplot} object, which can be modified using \code{ggplot2} syntax.
 \code{plot()} plots the output of a call to \code{simBA()}. The plot can contain either the estimated hazard ratios or standardized mean differences across simulations, each in a set of box plots.
 }
 \details{
-The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed). The bias plot plots the relative error in the log HR with a vertical line at 0\% (indicating no error). Note that these values can explode when the true HR is close to 0.
+The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed). The bias plot plots the relative error in the HR with a vertical line at 0\% (indicating no error).
 }
 \examples{
 # See help("simBA") for examples.

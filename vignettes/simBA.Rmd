@@ -1,0 +1,126 @@
+---
+title: "Simulation-based Bias Analysis (`simBA`)"
+author: "Rishi Desai, Noah Greifer"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is a vignette for `simBA`. This package conducts individual level simulations that can allow researchers to characterize the bias arising from unmeasured confounding with a specified but modifiable structure during the study design. Time-to-event outcomes are generated in simulated datasets based on user-specified treatment and outcome prevalence and other related variables including unmeasured confounders and their measured proxies. Results are summarized quantitatively to evaluate balance and bias when conducting analyses that do not account for unmeasured confounding (Level 1 adjustment) versus when accounting for unmeasured confounding through measured proxies (Level 2 adjustment).
+
+```{r setup}
+library(simBA)
+```
+
+::: {.alert .alert-info}
+### Creating a parameters file
+:::
+
+First, a user can create the `parameters` object that will be supplied to `simBA()` containing the parameters for the simulation design.
+
+```{r}
+parameters <- create_parameters(nbinary = 6,
+                                ncontinuous = 1,
+                                ncount = 1,
+                                # file = "parameters.csv",
+                                unmeasured_conf = "u1",
+                                unmeasured_type = "binary")
+
+# Note: uncomment `file` argument to automatically save file to supplied path
+```
+
+The user can manually fill in the parameter values in the csv file. An example file comes with the package, which we can load in using the following:
+
+```{r}
+parameters <- read.csv(system.file("extdata", "parameters.csv",
+                                   package = "simBA"))
+
+parameters
+```
+
+A representative directed acyclic graph (DAG) for data generation for the simulation study used in this vignette is shown below. Users are encouraged to use DAGs to explicitly convey design of their own simulations.
+
+![](images/dag.png){width="533"}
+
+### Running simulations using `simBA()`
+
+The following table provides guidance on how to design your simulations using various options available in the `simBA()` function.
+
+|                        |                                                                                                                                                                                                                                                                                  |
+|-----------------|-------------------------------------------------------|
+| **Option**             | **Specification notes**                                                                                                                                                                                                                                                          |
+| `iterations`           | The number of simulation iterations. Default is 500.                                                                                                                                                                                                                             |
+| `size`                 | The size of each sample to be generated. Default is 1000.                                                                                                                                                                                                                        |
+| `treatment_prevalence` | The desired prevalence of treatment. Should be a number between 0 and 1. This is REQUIRED to be specified with no defaults.                                                                                                                                                      |
+| `treatment_coeff`      | The coefficient on the treatment variable in the data-generating model for survival times. This is REQUIRED to be specified with no defaults.                                                                                                                                    |
+| `outcome_prevalence`   | The desired prevalence of the outcome. Based on the specified value, censoring time are adjusted for the data-generating model to achieve the desired prevalence. This is REQUIRED to be specified with no defaults.                                                             |
+| `dist`                 | The distribution to use to generate survival times. Allowable options include `"exponential"` (default) and `"weibull"`. Abbreviations allowed.                                                                                                                                  |
+| `unmeasured_conf`      | The name of the variable in `parameters` corresponding to the unmeasured confounder.                                                                                                                                                                                             |
+| `n_proxies`            | the number of proxies for the unmeasured confounder to include in the simulation. Default is 0.                                                                                                                                                                                  |
+| `proxy_type`           | When `n_proxies` is greater than 0, the type of variable the proxies should be. Allowable options include `"binary"` (default) and `"continuous"`. Abbreviations allowed.                                                                                                        |
+| `corr`                 | When `n_proxies` is greater than 0, the desired correlations between the proxy variable and the unmeasured confounder in the simulation. Should be length 1 (in which case all proxies have the same correlation with the unmeasured confounder) or length equal to `n_proxies`. |
+| `adj`                  | The method used to adjust for the confounders. Allowable options include `"matching"` (the default), which uses `MatchIt::matchit()`, and `"weighting"`, which uses `WeightIt::weightit()`. Abbreviations allowed.                                                               |
+| `adj_args`             | A list of arguments passed to `MatchIt::matchit()` or `WeightIt::weightit()` depending on the argument to `adj`. If not supplied, the parameter defaults will be used. Take care to specify these arguments to ensure the adjustment method is as desired.                       |
+| `estimand`             | The desired estimand to target. Allowable options include `"ATT"` (default), `"ATC"`, and `"ATE"`. Note this is also passed to the `estimand` argument of the function used for adjustment as specified by `adj` if omitted in `adj_args`.                                       |
+| `keep_data`            | Default is `FALSE`. Setting to `TRUE` will keep the datasets generated in each simulation and make the output object large.                                                                                                                                                      |
+| `cl`                   | A cluster object created by `parallel::makeCluster()`, or an integer to indicate number of child-processes (integer values are ignored on Windows) for parallel evaluations. See `?pbapply::pbapply` for details. Default is `NULL` for no parallel evaluation.                  |
+| `verbose`              | Whether to print information about the progress of the simulation, including a progress bar. Default is `TRUE`.                                                                                                                                                                  |
+
+```{r}
+sim <- simBA(parameters,
+             iterations = 500,
+             size = 1000,
+             treatment_prevalence = .2,
+             treatment_coeff = -.5,
+             outcome_prevalence = .05,
+             dist = "weibull",
+             unmeasured_conf = "u1",
+             n_proxies = 2,
+             proxy_type = "binary",
+             corr = c(0.5, 0.4), 
+             adj = "matching", 
+             adj_args = list(method = "nearest", caliper=0.2),
+             estimand = "ATT",
+             keep_data = FALSE,
+             # cl = 4, #uncomment for speed on Mac
+             verbose = FALSE)
+
+sim
+```
+
+### Reviewing the results
+
+```{r fig.height=5, fig.width=5}
+summary(sim)
+```
+
+The summary provides numerical results for key metrics including balance (standardized mean differences) and hazard ratios averaged over all simulation iterations.
+
+```{r fig.height=5, fig.width=5}
+plot(sim, type = "balance")
+```
+
+The balance plot provides distribution of absolute standardized mean differences (SMD) in the unmeasured confounder and proxies (when included) over the simulation runs. Vertical lines are placed at 0 (solid) to denote perfect balance, 0.1 (dashed) to denote 'reasonable' balance, and at the crude SMD for the unmeasured confounder (dotted). As you go from the unadjusted (which does not adjust for any confounding) to Level 1 (which only adjusts for measured confounding), large imbalances remain in the unmeasured confounder and proxies between treatment groups. Including proxies of unmeasured confounding in adjustment Level 2, excellent balance is achieved in the included proxies and imbalance also reduces for the unmeasured confounder due to correlations with the proxies.
+
+```{r fig.height=5, fig.width=5}
+plot(sim, type = "hr")
+```
+
+The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed). As you go from the unadjusted to Level 1 and Level 2, the distribution shifts closer to the simulated truth suggesting that accounting for unmeasured confounding through proxies in Level 2 helps in reducing the threat of unmeasured confounding.
+
+We can request a similar plot that displays the relative bias of the HR estimates (`(est_HR - true_HR) / true_HR`) by setting `type = "bias"`.
+
+```{r fig.height=5, fig.width=5}
+plot(sim, type = "bias")
+```
+
+See `?plot.simBA` for further details.

@@ -10,7 +10,7 @@
 #' A `ggplot` object, which can be modified using `ggplot2` syntax.
 #'
 #' @details
-#' The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed). The bias plot plots the relative error in the log HR with a vertical line at 0% (indicating no error). Note that these values can explode when the true HR is close to 0.
+#' The balance plot plots absolute standardized mean differences. Vertical lines are placed at 0 (solid) and .1 (dashed). The hazard ratio (HR) plot plots hazard ratios on a log scale for the x-axis. Vertical lines are placed at 1 (solid) and the true marginal HR (dashed). The bias plot plots the relative error in the HR with a vertical line at 0% (indicating no error).
 #'
 #' @seealso [simBA()] for performing the simulation.
 #'
@@ -96,7 +96,7 @@ plot.simBA <- function(x, type = "balance", ...) {
 
     est <- est[est$adjustment != "true",]
 
-    true <- log(x$HR_table$HR[x$HR_table$adjustment == "true"])
+    true <- x$HR_table$HR[x$HR_table$adjustment == "true"]
 
     est$adjustment <- factor(est$adjustment, levels = c("L2", "L1", "crude"),
                              labels = c(paste("Level 2", firstup(adj)),
@@ -104,16 +104,16 @@ plot.simBA <- function(x, type = "balance", ...) {
                                         "Unadjusted"))
 
     p <- ggplot(est) +
-      geom_boxplot(aes(x = (.data$HR - true) / abs(true),
+      geom_boxplot(aes(x = (exp(.data$HR) - true) / true,
                        y = .data$adjustment,
                        fill = .data$adjustment),
                    ...) +
       geom_vline(xintercept = 0) +
-      scale_x_continuous(labels = scales::percent_format()) +
+      scale_x_continuous(labels = scales::label_percent()) +
       scale_fill_grey(start = .55, end = .95) +
       theme_bw() +
       guides(fill = "none") +
-      labs(x = "Log Hazard Ratio Relative Bias", y = NULL)
+      labs(x = "Hazard Ratio Relative Bias", y = NULL)
 
     p
   }
