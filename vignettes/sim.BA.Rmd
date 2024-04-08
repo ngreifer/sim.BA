@@ -1,9 +1,9 @@
 ---
-title: "Simulation-based Bias Analysis (`simBA`)"
+title: "Simulation-based Bias Analysis (`sim.BA`)"
 author: "Rishi Desai, Noah Greifer"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Demo}
+  %\VignetteIndexEntry{Simulation-based Bias Analysis (`sim.BA`)}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,10 +15,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-This is a vignette for `simBA`. This package conducts individual level simulations that can allow researchers to characterize the bias arising from unmeasured confounding with a specified but modifiable structure during the study design. Time-to-event outcomes are generated in simulated datasets based on user-specified treatment and outcome prevalence and other related variables including unmeasured confounders and their measured proxies. Results are summarized quantitatively to evaluate balance and bias when conducting analyses that do not account for unmeasured confounding (Level 1 adjustment) versus when accounting for unmeasured confounding through measured proxies (Level 2 adjustment).
+This is a vignette for `sim.BA`. This package conducts individual level simulations that can allow researchers to characterize the bias arising from unmeasured confounding with a specified but modifiable structure during the study design. Time-to-event outcomes are generated in simulated datasets based on user-specified treatment and outcome prevalence and other related variables including unmeasured confounders and their measured proxies. Results are summarized quantitatively to evaluate balance and bias when conducting analyses that do not account for unmeasured confounding (Level 1 adjustment) versus when accounting for unmeasured confounding through measured proxies (Level 2 adjustment).
 
 ```{r setup}
-library(simBA)
+library(sim.BA)
 ```
 
 ::: {.alert .alert-info}
@@ -42,7 +42,7 @@ The user can manually fill in the parameter values in the csv file. An example f
 
 ```{r}
 parameters <- read.csv(system.file("extdata", "parameters.csv",
-                                   package = "simBA"))
+                                   package = "sim.BA"))
 
 parameters
 ```

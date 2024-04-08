@@ -79,7 +79,7 @@
 #' # Get parameters example; can also create
 #' # with `create_parameters()`
 #' parameters <- read.csv(system.file("extdata", "parameters.csv",
-#'                                    package = "simBA"))
+#'                                    package = "sim.BA"))
 #' \donttest{
 #'   # Run simulation; adjustment via PS weighting for
 #'   # the ATE

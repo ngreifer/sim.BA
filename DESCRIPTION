@@ -1,14 +1,14 @@
-Package: simBA
+Package: sim.BA
 Title: Simulation-Based Bias Analysis for Observational Studies
 Version: 0.1.0
 Authors@R: 
     c(
-    person("Rishi", "Desai", , "rdesai@bwh.harvard.edu", role = c("aut", "cre"),
+    person("Rishi", "Desai", , "rdesai@bwh.harvard.edu", role = c("aut"),
            comment = c(ORCID = "0000-0003-0299-7273")),
-    person("Noah", "Greifer", , "ngreifer@iq.harvard.edu", role = c("aut"),
+    person("Noah", "Greifer", , "ngreifer@iq.harvard.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-3067-7154"))
     )
-Description: This package allows user to conduct a simulation based quantitative
+Description: Allows user to conduct a simulation based quantitative
              bias analysis using covariate structures generated with individual-level
              data to characterize the bias arising from unmeasured confounding. Users
              can specify their desired data generating mechanisms to simulate data
