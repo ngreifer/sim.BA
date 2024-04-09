@@ -3,9 +3,9 @@ Title: Simulation-Based Bias Analysis for Observational Studies
 Version: 0.1.0
 Authors@R: 
     c(
-    person("Rishi", "Desai", , "rdesai@bwh.harvard.edu", role = c("aut"),
+    person("Rishi", "Desai", , "rdesai@bwh.harvard.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0299-7273")),
-    person("Noah", "Greifer", , "ngreifer@iq.harvard.edu", role = c("aut", "cre"),
+    person("Noah", "Greifer", , "ngreifer@iq.harvard.edu", role = c("aut"),
            comment = c(ORCID = "0000-0003-3067-7154"))
     )
 Description: Allows user to conduct a simulation based quantitative
