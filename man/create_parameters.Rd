@@ -14,7 +14,7 @@ create_parameters(
 )
 }
 \arguments{
-\item{nbinary, ncontinuous, ncount}{the number of binary, coutninuous, and count confounders to include, respectively. Default is 0.}
+\item{nbinary, ncontinuous, ncount}{the number of binary, continuous, and count confounders to include, respectively. Default is 0.}
 
 \item{unmeasured_conf}{the name of the unmeasured confounder. Default is \code{"u1"}.}
 
@@ -26,7 +26,7 @@ create_parameters(
 A data.frame containing a skeleton of the parameter values, which must be filled in manually by the user. See \emph{The \code{parameters} input object} section in the \code{\link[=simBA]{simBA()}} documentation for which columns will be present in the output. An additional column, Description, will also be produced, but it is not necessary to fill it in.
 }
 \description{
-\code{create_parameters()} facilitates creation of the \code{parameters} input to \code{\link[=simBA]{simBA()}}. This input contains informastion required to generate simulated dataset that will be analyzed within the simulation.
+\code{create_parameters()} facilitates creation of the \code{parameters} input to \code{\link[=simBA]{simBA()}}. This input contains information required to generate simulated dataset that will be analyzed within the simulation.
 }
 \examples{
 parameters <- create_parameters(nbinary = 6,

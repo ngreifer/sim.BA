@@ -1,8 +1,8 @@
 #' Create parameters for data-generating models
 #'
-#' `create_parameters()` facilitates creation of the `parameters` input to [simBA()]. This input contains informastion required to generate simulated dataset that will be analyzed within the simulation.
+#' `create_parameters()` facilitates creation of the `parameters` input to [simBA()]. This input contains information required to generate simulated dataset that will be analyzed within the simulation.
 #'
-#' @param nbinary,ncontinuous,ncount the number of binary, coutninuous, and count confounders to include, respectively. Default is 0.
+#' @param nbinary,ncontinuous,ncount the number of binary, continuous, and count confounders to include, respectively. Default is 0.
 #' @param unmeasured_conf the name of the unmeasured confounder. Default is `"u1"`.
 #' @param unmeasured_type the type of variable for the unmeasured confounder. Allowable options include `"binary"`, `"continuous"`, and `"count"`. Default is `"binary"`; abbreviations allowed.
 #' @param file optional; a string containing a path to a .csv or .xslx file where the output will be written to. If `NULL` (the default), no file will be written.

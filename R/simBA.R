@@ -11,7 +11,7 @@
 #' @param dist the distribution to use to generate survival times. Allowable options include `"exponential"` (default) and `"weibull"`. Abbreviations allowed.
 #' @param unmeasured_conf the name of the variable in `parameters` corresponding to the unmeasured confounder.
 #' @param n_proxies the number of proxies for the unmeasured confounder to include in the simulation. Default is 0.
-#' @param proxy_type when `n_proxies` is greater than 0, the type of variable the proxies should be. Allowable options in cldue `"binary"` (default) and `"continuous"`. Abbreviations allowed.
+#' @param proxy_type when `n_proxies` is greater than 0, the type of variable the proxies should be. Allowable options include `"binary"` (default) and `"continuous"`. Abbreviations allowed.
 #' @param corr when `n_proxies` is greater than 0, the desired correlations between the proxy variable and the unmeasured confounder in the simulation. Should be length 1 (in which case all proxies have the same correlation with the unmeasured confounder) or length equal to `n_proxies`.
 #' @param adj string; the method used to adjust for the confounders. Allowable options include `"matching"` (the default), which uses [MatchIt::matchit()], and `"weighting"`, which uses [WeightIt::weightit()]. Abbreviations allowed.
 #' @param estimand string; the desired estimand to target. Allowable options include `"ATT"` (default), `"ATC"`, and `"ATE"`. Note this is also passed to the `estimand` argument of the function used for adjustment as specified by `adj` if omitted in `adj_args`.
@@ -57,8 +57,8 @@
 #'   \item{`prevalence`}{the prevalence for binary variables (should be blank for all other variable types)}
 #'   \item{`mean`}{the mean for continuous and count variable (should be blank for binary variables)}
 #'   \item{`sd`}{the standard deviation for continuous variables (should be blank for all other variable types)}
-#'   \item{`coeff_treatment_model`}{the coefficient on that variable in the true propensity score model for the treatment (can be blank for any variable that doens't affect treatment)}
-#'   \item{`coeff_outcome_model`}{the coefficient on that variable in the outcome model for the treatment (can be blank for any variable that doens't affect the outcome)}
+#'   \item{`coeff_treatment_model`}{the coefficient on that variable in the true propensity score model for the treatment (can be blank for any variable that doesn't affect treatment)}
+#'   \item{`coeff_outcome_model`}{the coefficient on that variable in the outcome model for the treatment (can be blank for any variable that doesn't affect the outcome)}
 #' }
 #'
 #' The variable name supplied to `unmeasured_conf` must be present in the `parameters` input, and it must have nonzero values in both the `coeff_treatment_model` and `coeff_outcome_model` columns (or else it would not be a true confounder).

@@ -43,7 +43,7 @@ simBA(
 
 \item{n_proxies}{the number of proxies for the unmeasured confounder to include in the simulation. Default is 0.}
 
-\item{proxy_type}{when \code{n_proxies} is greater than 0, the type of variable the proxies should be. Allowable options in cldue \code{"binary"} (default) and \code{"continuous"}. Abbreviations allowed.}
+\item{proxy_type}{when \code{n_proxies} is greater than 0, the type of variable the proxies should be. Allowable options include \code{"binary"} (default) and \code{"continuous"}. Abbreviations allowed.}
 
 \item{corr}{when \code{n_proxies} is greater than 0, the desired correlations between the proxy variable and the unmeasured confounder in the simulation. Should be length 1 (in which case all proxies have the same correlation with the unmeasured confounder) or length equal to \code{n_proxies}.}
 
@@ -97,8 +97,8 @@ The \code{parameters} input must be of a specified form in order to be processed
 \item{\code{prevalence}}{the prevalence for binary variables (should be blank for all other variable types)}
 \item{\code{mean}}{the mean for continuous and count variable (should be blank for binary variables)}
 \item{\code{sd}}{the standard deviation for continuous variables (should be blank for all other variable types)}
-\item{\code{coeff_treatment_model}}{the coefficient on that variable in the true propensity score model for the treatment (can be blank for any variable that doens't affect treatment)}
-\item{\code{coeff_outcome_model}}{the coefficient on that variable in the outcome model for the treatment (can be blank for any variable that doens't affect the outcome)}
+\item{\code{coeff_treatment_model}}{the coefficient on that variable in the true propensity score model for the treatment (can be blank for any variable that doesn't affect treatment)}
+\item{\code{coeff_outcome_model}}{the coefficient on that variable in the outcome model for the treatment (can be blank for any variable that doesn't affect the outcome)}
 }
 
 The variable name supplied to \code{unmeasured_conf} must be present in the \code{parameters} input, and it must have nonzero values in both the \code{coeff_treatment_model} and \code{coeff_outcome_model} columns (or else it would not be a true confounder).
